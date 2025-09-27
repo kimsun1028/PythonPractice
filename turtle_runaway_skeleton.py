@@ -2,13 +2,15 @@
 # Please type '!python turtle_runaway.py' on IPython console in your Spyder.
 import tkinter as tk
 import turtle, random
+from math import atan2, degrees
 
 class RunawayGame:
     def __init__(self, canvas, runner, chaser, catch_radius=50):
-        self.canvas = canvas
-        self.runner = runner
-        self.chaser = chaser
-        self.catch_radius2 = catch_radius**2
+        # 데이터 필드, 멤버 변수
+        self.canvas = canvas        # 캔버스 변수
+        self.runner = runner        # 도망치는 거북이
+        self.chaser = chaser        # 쫓아가는 거북이
+        self.catch_radius2 = catch_radius**2 # 잡는 판정을 할 제곱 거리
 
         # Initialize 'runner' and 'chaser'
         self.runner.shape('turtle')
@@ -23,14 +25,14 @@ class RunawayGame:
         self.drawer = turtle.RawTurtle(canvas)
         self.drawer.hideturtle()
         self.drawer.penup()
-        print("hello")
 
-    def is_catched(self):
+    def is_catched(self):   # 거북이가 잡혔는지 판별하는 함수
         p = self.runner.pos()
         q = self.chaser.pos()
         dx, dy = p[0] - q[0], p[1] - q[1]
         return dx**2 + dy**2 < self.catch_radius2
 
+    # 초기 게임 설정 및 시작    
     def start(self, init_dist=400, ai_timer_msec=100):
         self.runner.setpos((-init_dist / 2, 0))
         self.runner.setheading(0)
@@ -39,7 +41,7 @@ class RunawayGame:
 
         # TODO) You can do something here and follows.
         self.ai_timer_msec = ai_timer_msec
-        self.canvas.ontimer(self.step, self.ai_timer_msec)
+        self.canvas.ontimer(self.step, self.ai_timer_msec) #msec 후에 step 함수 실행
 
     def step(self):
         self.runner.run_ai(self.chaser.pos(), self.chaser.heading())
@@ -62,10 +64,10 @@ class ManualMover(turtle.RawTurtle):
         self.step_turn = step_turn
 
         # Register event handlers
-        canvas.onkeypress(lambda: self.forward(self.step_move), 'Up')
-        canvas.onkeypress(lambda: self.backward(self.step_move), 'Down')
-        canvas.onkeypress(lambda: self.left(self.step_turn), 'Left')
-        canvas.onkeypress(lambda: self.right(self.step_turn), 'Right')
+        canvas.onkey(lambda: self.forward(self.step_move), 'w')
+        canvas.onkey(lambda: self.backward(self.step_move), 's')
+        canvas.onkey(lambda: self.left(self.step_turn), 'a')
+        canvas.onkey(lambda: self.right(self.step_turn), 'd')
         canvas.listen()
 
     def run_ai(self, opp_pos, opp_heading):
@@ -77,15 +79,18 @@ class RandomMover(turtle.RawTurtle):
         self.step_move = step_move
         self.step_turn = step_turn
 
+# 고쳐야 할 코드 : Chaser의 위치에 따른 Runner의 움직임 구현
     def run_ai(self, opp_pos, opp_heading):
-        mode = random.randint(0, 2)
-        if mode == 0:
-            self.forward(self.step_move)
-        elif mode == 1:
+        dx = opp_pos[0] - self.xcor()
+        dy = opp_pos[1] - self.ycor()
+        angle_to_opp = degrees(atan2(dy, dx))
+        if ((angle_to_opp - self.heading() + 180) % 360 - 180) > 0:
             self.left(self.step_turn)
-        elif mode == 2:
+        else:
             self.right(self.step_turn)
+        self.forward(self.step_move)
 
+# 메인 코드
 if __name__ == '__main__':
     # Use 'TurtleScreen' instead of 'Screen' to prevent an exception from the singleton 'Screen'
     root = tk.Tk()
@@ -94,8 +99,8 @@ if __name__ == '__main__':
     screen = turtle.TurtleScreen(canvas)
 
     # TODO) Change the follows to your turtle if necessary
-    runner = RandomMover(screen)
-    chaser = ManualMover(screen)
+    runner = ManualMover(screen)
+    chaser = RandomMover(screen)
 
     game = RunawayGame(screen, runner, chaser)
     game.start()
