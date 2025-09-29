@@ -2,16 +2,20 @@
 # Please type '!python turtle_runaway.py' on IPython console in your Spyder.
 import tkinter as tk
 import turtle, random
+import time
 from math import atan2, degrees
 
+# 실제 게임 실행하는 함수
 class RunawayGame:
-    def __init__(self, canvas, runner, chaser, catch_radius=50, remain_time = 60):
+    def __init__(self, canvas, runner, chasers,lifepoint = 3, catch_radius=30, remain_time = 60):
         # 데이터 필드, 멤버 변수
         self.canvas = canvas        # 캔버스 변수
-        self.runner = runner        # 도망치는 거북이
-        self.chaser = chaser        # 쫓아가는 거북이
+        self.runner = runner        # 도망치는 거북이      
         self.catch_radius2 = catch_radius**2 # 잡는 판정을 할 제곱 거리
         self.remain_time = remain_time
+        self.lifepoint = lifepoint
+        self.invincible_time = 0
+        self.start_time = time.time()
 
         # Initialize 'runner' and 'chaser'
         self.runner.shape('turtle')
@@ -19,29 +23,42 @@ class RunawayGame:
         self.runner.penup()
         self.runner.hideturtle()
 
-        self.chaser.shape('turtle')
-        self.chaser.color('red')
-        self.chaser.penup()
-        self.chaser.hideturtle()
+        self.chasers = chasers # 쫓아가는 거북이 리스트
+        for chaser in chasers:    
+            chaser.shape('turtle')
+            chaser.color('red')
+            chaser.penup()
+            chaser.hideturtle()
 
         # Instantiate another turtle for drawing
         self.drawer = turtle.RawTurtle(canvas)
         self.drawer.hideturtle()
         self.drawer.penup()
 
+        # chaser 리스트 
+        self.chaserlist = []
 
+    def remainlife(self):   # 플레이어 거북이가 잡혔는지 판별하는 함수
+        if self.invincible_time >0:
+            self.invincible_time -= 1
+            return self.lifepoint
 
-    def is_catched(self):   # 거북이가 잡혔는지 판별하는 함수
         p = self.runner.pos()
-        q = self.chaser.pos()
-        dx, dy = p[0] - q[0], p[1] - q[1]
-        return dx**2 + dy**2 < self.catch_radius2
+        for chaser in self.chasers:
+            q = chaser.pos()
+            dx, dy = p[0] - q[0], p[1] - q[1]
+            if dx**2 + dy**2 < self.catch_radius2:
+                self.lifepoint -= 1
+                self.invincible_time = 10
+                break
+        return self.lifepoint
+             
 
-
+            
     def explain_and_start(self):
         self.drawer.clear()
-        self.drawer.setpos(0,0)
-        self.drawer.write("게임을 시작하려면 엔터를 누르세요 : ")
+        self.drawer.setpos(-350,0)
+        self.drawer.write("전진 : W , 회전 : A,D , 후진 : S , 폭탄 설치/폭발 : 마우스 왼클릭 \n게임을 시작하려면 엔터를 누르세요 : ", font=("Arial",20,"bold"))
         self.canvas.onkey(lambda: self.start_game(),"Return")
         self.canvas.listen()
 
@@ -52,11 +69,17 @@ class RunawayGame:
     # 게임 시작    
     def start(self, init_dist=400, ai_timer_msec=100):
         self.runner.showturtle()
-        self.chaser.showturtle()
-        self.runner.setpos((-init_dist / 2, 0))
+        self.runner.setpos((0, 0))
         self.runner.setheading(0)
-        self.chaser.setpos((+init_dist / 2, 0))
-        self.chaser.setheading(180)
+        for i, chaser in enumerate(self.chasers):
+            chaser.showturtle()
+            if i % 2 == 1:
+                chaser.setpos((init_dist * (-1)**(i//2)),0)
+                chaser.setheading(90 * (i))
+            else:
+                chaser.setpos(0,(init_dist* (-1)**(i//2 + 1)))
+                chaser.setheading(90 * (i))
+        
 
         # TODO) You can do something here and follows.
         self.ai_timer_msec = ai_timer_msec
@@ -65,19 +88,27 @@ class RunawayGame:
 
 
     def step(self):
-        self.runner.run_ai(self.chaser.pos(), self.chaser.heading())
-        self.chaser.chase_ai(self.runner.pos(), self.runner.heading())
+        for chaser in self.chasers:
+            chaser.chase_ai(self.runner.pos(), self.runner.heading())
 
         # TODO) You can do something here and follows.
-        is_catched = self.is_catched()
+        elapsed = time.time() - self.start_time
+        self.remain_time = 60 - elapsed
+        remainlife = self.remainlife() 
         self.drawer.clear()
         self.drawer.penup()
-        self.drawer.setpos(-300, 300)
-        self.remain_time -= self.ai_timer_msec / 1000
-        self.drawer.write(f'Time left : {int(self.remain_time)}s, Is catched? {is_catched}')
+        self.drawer.setpos(-700, 400)
+        self.drawer.write(f'남은 시간 : {int(self.remain_time)}s, 라이프 = {remainlife}', font=("Arial",15,"bold"))
 
         # Note) The following line should be the last of this function to keep the game playing
-        self.canvas.ontimer(self.step, self.ai_timer_msec)
+        if (remainlife > 0) and (self.remain_time > 0):
+            self.canvas.ontimer(self.step, self.ai_timer_msec)
+        else:
+            self.drawer.clear()
+            self.drawer.penup()
+            self.drawer.setpos(-200,0)
+            self.drawer.write('GAME OVER!')
+            return 0
 
 class ManualMover(turtle.RawTurtle):
     def __init__(self, canvas, step_move=10, step_turn=10):
@@ -101,12 +132,11 @@ class ManualMover(turtle.RawTurtle):
             self.bomb.place(self.xcor(),self.ycor())
         else:
             self.bomb.explode()   
-            self.bomb.exploderange += 0.2 
 
     def run_ai(self, opp_pos, opp_heading):
         pass
 
-class RandomMover(turtle.RawTurtle):
+class ChaserMover(turtle.RawTurtle):
     def __init__(self, canvas, step_move=10, step_turn=10):
         super().__init__(canvas)
         self.step_move = step_move
@@ -155,15 +185,14 @@ class Bomb(turtle.RawTurtle):
 if __name__ == '__main__':
     # Use 'TurtleScreen' instead of 'Screen' to prevent an exception from the singleton 'Screen'
     root = tk.Tk()
-    canvas = tk.Canvas(root, width=700, height=700)
+    canvas = tk.Canvas(root, width=1500, height=900)
     canvas.pack()
     screen = turtle.TurtleScreen(canvas)
 
     # TODO) Change the follows to your turtle if necessary
     runner = ManualMover(screen)
-    chaser = RandomMover(screen)
-
-    game = RunawayGame(screen, runner, chaser)
+    chasers = [ChaserMover(screen) for _ in range(4)]
+    game = RunawayGame(screen, runner, chasers)
     game.explain_and_start()
    
     screen.mainloop()
