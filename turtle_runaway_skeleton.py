@@ -177,7 +177,10 @@ class Bomb(turtle.RawTurtle):
             self.shapesize(self.exploderange,self.exploderange)
             self.canvas.ontimer(self.hideturtle,200)
             self.isplaced = False
-            return[(self.xcor(),self.ycor()),self.exploderange]
+            
+            hit_list = []
+            for chaser in self.chasers:
+                dx = self.xcor
         
 
 # 메인 코드
