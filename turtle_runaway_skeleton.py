@@ -178,13 +178,14 @@ class Bomb(turtle.RawTurtle):                       # 플레이어의 무기 : �
             self.shape("explode.gif")                   # 폭발 외형 설정
             self.canvas.ontimer(self.hideturtle,200)    # 외형 유지 시간 설정
             self.isplaced = False                       # 폭탄 설치 해제
-        
-            for i,chaser in enumerate(self.chasers):    # 폭탄에 맞은 상대방 설정
+    
+            for i in reversed(range(len(self.chasers))):        # 폭탄에 맞은 상대방 설정
+                chaser = self.chasers[i]      
                 dx = self.xcor() - chaser.xcor()
                 dy = self.ycor() - chaser.ycor()
                 if (dx**2 + dy**2) < (self.exploderange)**2:    # 폭탄에 맞았으면
                     chaser.shape("dieturtle.gif")               # 외형 설정
-                    self.chasers.pop(i)                         # 상대방 리스트에서 pop
+                    self.chasers.pop(i)                         # 상대방 리스트 뒷IDX부터 에서 pop
         
 
 # 메인 코드
