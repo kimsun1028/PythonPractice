@@ -35,14 +35,11 @@ class RunawayGame:
         self.drawer.hideturtle()
         self.drawer.penup()
 
-        # chaser 리스트 
-        self.chaserlist = []
 
     def remainlife(self):   # 플레이어 거북이가 잡혔는지 판별하는 함수
         if self.invincible_time >0:
             self.invincible_time -= 1
             return self.lifepoint
-
         p = self.runner.pos()
         for chaser in self.chasers:
             q = chaser.pos()
@@ -115,7 +112,7 @@ class ManualMover(turtle.RawTurtle):
         super().__init__(canvas)
         self.step_move = step_move
         self.step_turn = step_turn
-        self.bomb = Bomb(canvas)
+        self.bomb = Bomb(canvas,self.chasers)
 
         # Register event handlers
         canvas.onkey(lambda: self.forward(self.step_move), 'w')
@@ -154,8 +151,9 @@ class ChaserMover(turtle.RawTurtle):
         self.forward(self.step_move)
 
 class Bomb(turtle.RawTurtle):
-    def __init__(self,canvas,radius = 50):
+    def __init__(self,canvas,chasers,radius = 50):
         super().__init__(canvas)
+        self.chasers = chasers
         self.radius = radius
         self.shape("circle")
         self.color("orange")
@@ -179,6 +177,7 @@ class Bomb(turtle.RawTurtle):
             self.shapesize(self.exploderange,self.exploderange)
             self.canvas.ontimer(self.hideturtle,200)
             self.isplaced = False
+            return[(self.xcor(),self.ycor()),self.exploderange]
         
 
 # 메인 코드
