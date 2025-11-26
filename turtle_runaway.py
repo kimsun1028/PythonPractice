@@ -18,13 +18,13 @@ class RunawayGame:
         self.start_time = time.time()           # 남은 시간 계산을 위한 시작 시간 
 
         # Initialize 'runner' and 'chaser'
-        self.runner.shape('runnerturtle.gif')   # 플레이어 거북이 사진 설정
+        self.runner.shape('image/runnerturtle.gif')   # 플레이어 거북이 사진 설정
         self.runner.penup()                     # 펜 들기
         self.runner.hideturtle()                # 플레이어 가려놓기
 
         self.chasers = chasers                  # 쫓아가는 거북이(상대편) 리스트
         for chaser in chasers:                  
-            chaser.shape('chaserturtle.gif')    # 상대편 거북이 사진 설정
+            chaser.shape('image/chaserturtle.gif')    # 상대편 거북이 사진 설정
             chaser.penup()                      # 펜 들기
             chaser.hideturtle()                 # 상대편 가려놓기
 
@@ -89,9 +89,9 @@ class RunawayGame:
         self.remain_time = 60 - elapsed                                 # 남은 시간 계산
         remainlife , isInvincible = self.remainlife()                   # 남은 라이프, 무적 유무 
         if isInvincible:                                                # 무적 시간일 경우 외형 변경
-            self.runner.shape("invincibleturtle.gif")
+            self.runner.shape("image/invincibleturtle.gif")
         else:
-            self.runner.shape("runnerturtle.gif")                       # 무적 시간이 끝날 경우 외형 복구
+            self.runner.shape("image/runnerturtle.gif")                       # 무적 시간이 끝날 경우 외형 복구
 
         self.drawer.clear()                                             # 남은 시간, 라이프,  남은 적의 수, 점수 출력
         self.drawer.penup()
@@ -175,7 +175,7 @@ class Bomb(turtle.RawTurtle):                       # 플레이어의 무기 : �
         if not self.isplaced:                       # 설치가 안되어있으면 False return
             return False
         else:
-            self.shape("explode.gif")                   # 폭발 외형 설정
+            self.shape("image/explode.gif")                   # 폭발 외형 설정
             self.canvas.ontimer(self.hideturtle,200)    # 외형 유지 시간 설정
             self.isplaced = False                       # 폭탄 설치 해제
     
@@ -184,7 +184,7 @@ class Bomb(turtle.RawTurtle):                       # 플레이어의 무기 : �
                 dx = self.xcor() - chaser.xcor()
                 dy = self.ycor() - chaser.ycor()
                 if (dx**2 + dy**2) < (self.exploderange)**2:    # 폭탄에 맞았으면
-                    chaser.shape("dieturtle.gif")               # 외형 설정
+                    chaser.shape("image/dieturtle.gif")               # 외형 설정
                     self.chasers.pop(i)                         # 상대방 리스트 뒷IDX부터 에서 pop
         
 
@@ -195,13 +195,13 @@ if __name__ == '__main__':
     canvas = tk.Canvas(root, width=1500, height=900)
     canvas.pack()
     screen = turtle.TurtleScreen(canvas)
-    screen.addshape("runnerturtle.gif")                 # 외형(사진) 추가
-    screen.addshape("bomb.gif")
-    screen.addshape("explode.gif")
-    screen.addshape("chaserturtle.gif")
-    screen.addshape("dieturtle.gif")
-    screen.addshape("invincibleturtle.gif")
-    screen.bgpic("gamefield.gif")                       # 배경 사진 설정
+    screen.addshape("image/runnerturtle.gif")                 # 외형(사진) 추가
+    screen.addshape("image/bomb.gif")
+    screen.addshape("image/explode.gif")
+    screen.addshape("image/chaserturtle.gif")
+    screen.addshape("image/dieturtle.gif")
+    screen.addshape("image/invincibleturtle.gif")
+    screen.bgpic("image/gamefield.gif")                       # 배경 사진 설정
     # TODO) Change the follows to your turtle if necessary
     chasers = [ChaserMover(screen) for _ in range(4)]   # 상대방 리스트 생성
     runner = ManualMover(screen,chasers)                # 플레이어 생성
